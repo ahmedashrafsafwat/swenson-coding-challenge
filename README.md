@@ -28,13 +28,19 @@ please import the data from the `mongodb_exports/dumb/swenson` folder by running
 
 run `npm install`
 
-run `npm start` or `nodemon start`
+run `npm run start` or `nodemon start`
 
 ### To run the test file run
 
-`npm test`
+`npm run test`
+
+### To have a look at the API documentation
+
+1. please run the application first by running `npm run start`
+2. then head over to `http://localhost:3000/api-docs/`
 
 ### Some query URL examples to test:
 
-`http://localhost:3000/coffee/get/?product_type=large&water_line_compatible=false&pack_size=0`
-`http://localhost:3000/coffee/get/?product_type=large&water_line_compatible=false&pack_size=12&coffee_flavor=vanilla`
+`http://localhost:3000/coffee/get/?product_type=COFFEE_MACHINE_LARGE`
+`http://localhost:3000/coffee/get/?product_type=COFFEE_POD_LARGE&coffee_flavor=COFFEE_FLAVOR_VANILLA`
+`http://localhost:3000/coffee/all/?product_type=POD&pack_size=84`

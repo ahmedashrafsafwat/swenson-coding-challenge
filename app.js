@@ -8,6 +8,10 @@ const dotenv = require("dotenv");
 const MongoStore = require("connect-mongo")(session);
 const path = require("path");
 const os = require("os");
+var swaggerJsdoc = require("swagger-jsdoc");
+var swaggerUi = require("swagger-ui-express");
+var swaggerJSON = require("./swagger.json");
+
 
 // Get the OS
 const osType = os.type();
@@ -38,6 +42,7 @@ mongoose.connection.on("error", err => {
   process.exit();
 });
 
+
 // Express Configurations
 app.set("host", process.env.OPENSHIFT_NODEJS_IP || "0.0.0.0");
 app.set("port", process.env.PORT || process.env.OPENSHIFT_NODEJS_PORT || 3000);
@@ -57,11 +62,15 @@ app.use(
   })
 );
 
-app.use(cors());
+// swagger jsdoc
+const specs = swaggerJsdoc(swaggerJSON);
 app.use(
-  "/",
-  express.static(path.join(__dirname, "public"), { maxAge: 31557600000 })
+  "/api-docs",
+  swaggerUi.serve,
+  swaggerUi.setup(specs)
 );
+
+app.use(cors());
 
 // Application Routes
 app.use("/coffee", coffeeRouter);

@@ -2,25 +2,94 @@ const routes = require("express").Router();
 const Coffee = require("../models/Coffee");
 var ObjectId = require("mongoose").Types.ObjectId;
 
+
 /**
- *  Get all coffees
- */
-routes.get("/all", (req, res) => {
-  Coffee.find({ isPublished: true })
+ * @swagger
+ * coffee/all/:
+ *   get:
+ *     summary: Get all coffees or pods using the sent filters
+ *     description: Retrieve a list of coffee and pods by sending the product_type as query params. and also you can filter using pack_size,coffee_flavor,water_line_compatible.
+ *     parameters:
+ *      - in: path
+ *        name: product_type
+ *        type: string
+ *        required: true
+ *        description: the product type like ESPRESSO_POD
+ *      - in: path
+ *        name: pack_size
+ *        type: integer
+ *        required: false
+ *        description: the pods pack size like 84
+ *      - in: path
+ *        name: coffee_flavor
+ *        type: string
+ *        required: false
+ *        description: the the pods flavor like COFFEE_FLAVOR_VANILLA
+ *      - in: path
+ *        name: water_line_compatible
+ *        type: boolean
+ *        required: false
+ *        description: the the water line compatiblity like true or false
+ *     responses:
+ *       200:
+ *         description: A list of coffee or pods.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                    type: string
+ *                    description: the api return message
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                     description: returned list of coffee or pods
+ *  
+ *                    
+*/
+routes.get("/all/", (req, res) => {
+
+  // filters in coffee machine screen => {product_type , water_line_compatible}
+  // filters in  pods screen => {product_type,coffee_flavor,pack_size}
+  let product_type = req.query.product_type,
+  pack_size = req.query.pack_size,
+  coffee_flavor = req.query.coffee_flavor,
+  water_line_compatible = req.query.water_line_compatible,
+  filter={
+      product_type: product_type ? {$regex: product_type} : null ,
+      pack_size,
+      coffee_flavor,
+      water_line_compatible
+    };
+  
+  // remove the undefined from the object
+  Object.keys(filter).forEach(key => filter[key] === undefined ? delete filter[key] : {});
+
+if(Object.keys(filter).length === 0 ) // no query prams is sent
+  return res.status(400).json({ message: "query pramaters are missing" }); // return a bad request resopone
+else if(!('product_type' in filter)) // product type is requeired
+  return res.status(400).json({ message: "Product type is required" }); // return a bad request resopone
+
+// generate a find query to the database
+  Coffee.find(filter)
     .lean()
     .exec((err, coffees) => {
       if (err) {
-        res.status(404).json({ message: "Error getting coffees" });
+        res.status(500).json({ message: "Data call  Error" });
       } else {
+
         // Note: returned coffees will be in form of array
         if (coffees && coffees.length > 0) {
           res.contentType("json");
+          const finalArr = coffees.map(x=> x.sku_code)
           res.status(200).json({
             message: "Successfully retrieved all the coffees",
-            data: coffees
+            data: finalArr
           });
         } else {
-          res.status(200).json({
+          res.status(404).json({
             message: "No coffees found",
             data: []
           });
@@ -69,45 +138,5 @@ routes.post("/add", (req, res) => {
   });
 });
 
-/**
- * Get a specific product(s) and return it's SKU code
- */
-routes.get("/get/", (req, res) => {
-  // get the filters from url query
-  var filterObject = {};
-  if (req.query.product_type)
-    filterObject.product_type = {
-      $regex: req.query.product_type.toUpperCase()
-    };
-
-  if (req.query.water_line_compatible)
-    filterObject.water_line_compatible =
-      req.query.water_line_compatible == "true";
-
-  if (req.query.coffee_flavor)
-    filterObject.coffee_flavor = {
-      $regex: req.query.coffee_flavor.toUpperCase()
-    };
-
-  if (req.query.pack_size && req.query.pack_size > 0)
-    filterObject.pack_size = Number(req.query.pack_size);
-
-  if (req.query.model) filterObject.model = req.query.model;
-
-  // Search for the targeted products
-  Coffee.find(filterObject, (err, result) => {
-    if (err) {
-      res.status(404).send({
-        message: "An error occured get the products"
-      });
-    } else {
-      // return the SKU code only
-      var data = result.map(x => x.sku_code);
-
-      // return the results
-      res.status(200).send({ data });
-    }
-  });
-});
 
 module.exports = routes;

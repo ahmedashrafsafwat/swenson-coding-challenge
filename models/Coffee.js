@@ -5,10 +5,10 @@ var Schema = mongoose.Schema,
 
 const coffeeSchema = new mongoose.Schema(
   {
-    sku_code: String,
-    product_type: String,
-    water_line_compatible: Boolean,
-    coffee_flavor: String,
+    sku_code: String, // the sku code
+    product_type: String, // coffee/ espresso machine or pods
+    water_line_compatible: Boolean, // compatiblity with water_line
+    coffee_flavor: String, // 
     pack_size: Number,
     model: String
   },
